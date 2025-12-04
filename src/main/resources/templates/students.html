@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Management System</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at top, #101010, #000000);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #eee;
+        }
+
+        .card {
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            width: 92%;
+            max-width: 1100px;
+            border-radius: 18px;
+            padding: 35px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.7);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        .top-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .top-bar input {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background: #111;
+            color: #eee;
+            outline: none;
+        }
+
+        .top-bar input::placeholder { color: #777; }
+
+        .top-bar button {
+            background: linear-gradient(135deg, #6a5cff, #4f3cff);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .top-bar button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 12px rgba(100,90,255,0.6);
+        }
+
+        .search-box {
+            margin-bottom: 10px;
+        }
+
+        .search-box input { width: 240px; }
+
+        .count {
+            margin: 10px 0 20px;
+            font-weight: 600;
+        }
+
+        .error {
+            background: #ff4444;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #5f5cff, #3f3cff);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #2b2b2b;
+        }
+
+        tbody tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .sort a {
+            color: white;
+            text-decoration: none;
+            margin-left: 4px;
+            font-size: 13px;
+        }
+
+        .delete {
+            color: #ff5c5c;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .delete:hover { text-decoration: underline; }
+
+        .edit-box {
+            width: 80px;
+            padding: 6px;
+            border-radius: 6px;
+            border: none;
+            background: #101010;
+            color: white;
+            text-align: center;
+        }
+
+        .save-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 10px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .save-btn:hover { background: #2ecc71; }
+
+        @media(max-width: 700px) {
+            .top-bar { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+
+    <h1>Student Management System</h1>
+
+    <!-- ✅ Add Student -->
+    <form th:action="@{/add}" method="post">
+        <div class="top-bar">
+            <input type="text" name="name" placeholder="Student Name" required>
+            <input type="number" name="marks" placeholder="Marks" required>
+            <button type="submit">Add</button>
+        </div>
+    </form>
+
+    <!-- ✅ Validation Error -->
+    <div class="error" th:if="${error}" th:text="${error}"></div>
+
+    <!-- ✅ Search -->
+    <div class="search-box">
+        <input type="text" id="search" placeholder="Search by name...">
+    </div>
+
+    <!-- ✅ Total -->
+    <div class="count">Total Students: <span th:text="${debugCount}"></span></div>
+
+    <!-- ✅ Student Table -->
+    <table id="table">
+        <thead>
+        <tr class="sort">
+            <th>ID
+                <a th:href="@{/students(sort='id',dir='asc')}">▲</a>
+                <a th:href="@{/students(sort='id',dir='desc')}">▼</a>
+            </th>
+            <th>Name
+                <a th:href="@{/students(sort='name',dir='asc')}">▲</a>
+                <a th:href="@{/students(sort='name',dir='desc')}">▼</a>
+            </th>
+            <th>Marks
+                <a th:href="@{/students(sort='marks',dir='asc')}">▲</a>
+                <a th:href="@{/students(sort='marks',dir='desc')}">▼</a>
+            </th>
+            <th>Action</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="s : ${students}">
+            <td th:text="${s.id}"></td>
+            <td th:text="${s.name}"></td>
+
+            <!-- ✅ Inline Edit -->
+            <td>
+                <form th:action="@{/update}" method="post" style="display:inline;">
+                    <input type="hidden" name="id" th:value="${s.id}">
+                    <input class="edit-box" type="number" name="marks" th:value="${s.marks}">
+                    <button class="save-btn">✔</button>
+                </form>
+            </td>
+
+            <td>
+                <a class="delete" th:href="@{/delete/{id}(id=${s.id})}">Delete</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<!-- ✅ Live Search Script -->
+<script>
+    document.getElementById("search").addEventListener("keyup", function () {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll("#table tbody tr");
+
+        rows.forEach(row => {
+            let name = row.cells[1].innerText.toLowerCase();
+            row.style.display = name.includes(filter) ? "" : "none";
+        });
+    });
+</script>
+
+</body>
+</html>
